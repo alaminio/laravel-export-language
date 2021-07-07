@@ -1,0 +1,30 @@
+{
+    "name": "topup/export-laravel-lang",
+    "description": "This package export language files in csv",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "MD AL AMIN",
+            "email": "hello@alamin.io"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {
+        "php" : "^7.2.5",
+        "laravel/framework": "^6.0",
+        "maatwebsite/excel": "^3.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "Topup\\LangExport\\" : "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Topup\\LangExport\\LangExportServiceProvider"
+            ]
+        }
+    }
+}
