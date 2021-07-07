@@ -10,14 +10,23 @@ use Topup\LangExport\Exports\ExportExcelReport;
 
 class ExportController extends Controller
 {
-    private $_langPath;
-    private $_directories;
+    private $_languagePaths = [];
+    private $_directories = [];
     private $_ds;
 
     public function __construct()
     {
-        $this->_langPath = App::langPath();
-        $this->_directories = glob($this->_langPath . '/*', GLOB_ONLYDIR);
+        $this->_languagePaths[] = App::langPath();
+        $this->_languagePaths[] = base_path('vendor/topup/cash-pickup/resources/lang');
+
+        foreach ($this->_languagePaths as $path) {
+            $dirs = glob($path . '/*', GLOB_ONLYDIR);
+            if(is_array($dirs)) {
+                $this->_directories = array_merge($this->_directories, $dirs);
+            }
+
+        }
+
         $this->_ds = DIRECTORY_SEPARATOR;
     }
 
@@ -35,9 +44,15 @@ class ExportController extends Controller
                 $fileName = end($parts);
                 $fileNameWithoutExtension = str_replace('.php', '', $fileName);
 
+                $package = 'main';
+                if(strpos($file, 'cash-pickup')) {
+                    $package = 'cash-pickup';
+                }
+
                 $languageFiles[$lang][] = [
                     'file' => $fileName,
                     'name' => $fileNameWithoutExtension,
+                    'package' => $package,
                 ];
             }
         }
@@ -45,10 +60,15 @@ class ExportController extends Controller
         return view('topup-export-lang::index', compact('languageFiles'));
     }
 
-    public function download($lang, $name)
+    public function download($pkg, $lang, $name)
     {
-        Lang::setLocale($lang);
-        $messages = Lang::get($name);
+        if($pkg === 'main') {
+            $messages = require_once  App::langPath() . $this->_ds . $lang . $this->_ds . $name . '.php';
+        } elseif ($pkg == 'cash-pickup') {
+            $messages = require_once base_path('vendor/topup/cash-pickup/resources/lang') . $this->_ds . $lang . $this->_ds . $name . '.php';
+        } else {
+            return 'Something went wrong';
+        }
 
         $data = [];
         $exportable = [
