@@ -16,7 +16,7 @@
             <ul class="list-group">
                 <li class="list-group-item active">{{ $index }}</li>
             @foreach($languageFile as $file)
-                    <li class="list-group-item"><a href="{{ route('topup.exportLang.download', [$index, $file['name']]) }}">{{ $file['file'] }}</a></li>
+                    <li class="list-group-item">[{{ $file['package'] }}] <a href="{{ route('topup.exportLang.download', [$file['package'], $index, $file['name']]) }}">{{ $file['file'] }}</a></li>
                 @endforeach
             </ul>
         @endforeach
