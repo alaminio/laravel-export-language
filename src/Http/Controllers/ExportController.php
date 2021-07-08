@@ -5,7 +5,7 @@ namespace Topup\LangExport\Http\Controllers;
 
 use App;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Lang;
+use Illuminate\Http\Request;
 use Topup\LangExport\Exports\ExportExcelReport;
 
 class ExportController extends Controller
@@ -21,7 +21,7 @@ class ExportController extends Controller
 
         foreach ($this->_languagePaths as $path) {
             $dirs = glob($path . '/*', GLOB_ONLYDIR);
-            if(is_array($dirs)) {
+            if (is_array($dirs)) {
                 $this->_directories = array_merge($this->_directories, $dirs);
             }
 
@@ -45,7 +45,7 @@ class ExportController extends Controller
                 $fileNameWithoutExtension = str_replace('.php', '', $fileName);
 
                 $package = 'main';
-                if(strpos($file, 'cash-pickup')) {
+                if (strpos($file, 'cash-pickup')) {
                     $package = 'cash-pickup';
                 }
 
@@ -62,8 +62,8 @@ class ExportController extends Controller
 
     public function download($pkg, $lang, $name)
     {
-        if($pkg === 'main') {
-            $messages = require_once  App::langPath() . $this->_ds . $lang . $this->_ds . $name . '.php';
+        if ($pkg === 'main') {
+            $messages = require_once App::langPath() . $this->_ds . $lang . $this->_ds . $name . '.php';
         } elseif ($pkg == 'cash-pickup') {
             $messages = require_once base_path('vendor/topup/cash-pickup/resources/lang') . $this->_ds . $lang . $this->_ds . $name . '.php';
         } else {
@@ -77,7 +77,7 @@ class ExportController extends Controller
         ];
 
         foreach ($messages as $key => $message) {
-            if(is_array($message) && isset($message['message'])) {
+            if (is_array($message) && isset($message['message'])) {
                 $message = $message['message'];
             }
             $data[] = [
@@ -87,5 +87,38 @@ class ExportController extends Controller
         }
 
         return (new ExportExcelReport($exportable, $data))->download($lang . '_' . $name . '.xls');
+    }
+
+    public function parseJS(Request $request)
+    {
+        try {
+            $jsFile = $request->jsFile;
+            $jsContent = file_get_contents($jsFile->getRealPath());
+        } catch (\Throwable $exception) {
+            logger($exception);
+            return back();
+        }
+
+        return view('topup-export-lang::js-index', compact('jsContent'));
+    }
+
+    public function downloadJSStrings(Request $request)
+    {
+        $messages = json_decode($request->strings, true);
+
+        $data = [];
+        $exportable = [
+            'key' => 'Key',
+            'message' => 'Message',
+        ];
+
+        foreach ($messages as $key => $message) {
+            $data[] = [
+                'key' => $key,
+                'message' => $message,
+            ];
+        }
+
+        return (new ExportExcelReport($exportable, $data))->download($request->lang . '_app_strings.xls');
     }
 }
